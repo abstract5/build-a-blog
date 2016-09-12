@@ -1,5 +1,4 @@
 import webapp2
-import cgi
 import jinja2
 import os
 from google.appengine.ext import db
@@ -22,18 +21,37 @@ class Handler(webapp2.RequestHandler):
 
 class Post(db.Model):
     title = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
+    con = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
 class MainHandler(Handler):
-    def render_front(self, ):
-        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 5")
+    def get(self):
+        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
 
-        self.render("front.html")
+        self.render("front.html", posts=posts)
+
+class SubmitHandler(Handler):
+    def render_submit(self, title="", con="", error=""):
+        self.render("submit.html", title=title, con=con, error=error)
 
     def get(self):
+        self.render_submit()
 
+    def post(self):
+        title = self.request.get("title")
+        con = self.request.get("con")
+
+        if title and con:
+            p = Post(title=title, con=con)
+            p.put()
+
+            self.redirect("/")
+        else:
+            error = "We need both content and a title!"
+            self.render_submit(title, con, error)
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+    ('/submission', SubmitHandler)#,
+    #('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
