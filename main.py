@@ -1,6 +1,7 @@
 import webapp2
 import jinja2
 import os
+import re
 from google.appengine.ext import db
 
 
@@ -26,8 +27,11 @@ class Post(db.Model):
 
 class MainHandler(Handler):
     def get(self):
-        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
+        self.redirect("/blog")
 
+class BlogHandler(Handler):
+    def get(self):
+        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 5")
         self.render("front.html", posts=posts)
 
 class SubmitHandler(Handler):
@@ -45,13 +49,21 @@ class SubmitHandler(Handler):
             p = Post(title=title, con=con)
             p.put()
 
-            self.redirect("/")
+            self.redirect("/blog/%s" % str(p.key().id()))
         else:
             error = "We need both content and a title!"
             self.render_submit(title, con, error)
 
+class ViewPostHandler(Handler):
+    def get(self, posted_id):
+        blogPost = Post.get_by_id(int(posted_id))
+
+        self.render("viewpost.html", blogPost=blogPost)
+
+
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/submission', SubmitHandler)#,
-    #('/blog/<id:\d+>', ViewPostHandler)
+    (r'/', MainHandler),
+    (r'/blog', BlogHandler),
+    (r'/blog/submission', SubmitHandler),
+    webapp2.Route(r'/blog/<posted_id:\d+>', ViewPostHandler)
 ], debug=True)

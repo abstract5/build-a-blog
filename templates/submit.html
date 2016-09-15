@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form method="post" action="/submission">
+<form method="post" action="/blog/submission">
     <label>
         <div>Title</div>
         <input type="text" name="title" value="{{ title }}"/>
@@ -15,6 +15,6 @@
 
     <div class="error">{{ error }}</div>
 
-    <input type="submit"/>
+    <input type="submit" value="Post"/>
 </form>
 {% endblock %}
